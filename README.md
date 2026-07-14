@@ -6,7 +6,7 @@ asking for things. **Story #3 — the era `olympian-order`.**
 A story addon for the [Mythos](https://github.com/Crew-co/Mythos) engine.
 
 ```kotlin
-compileOnly("net.crewco:mythos-addon-api:0.1.0")
+compileOnly("net.crewco:mythos-addon-api:0.1.2")
 ```
 
 ## The one that changes the server
