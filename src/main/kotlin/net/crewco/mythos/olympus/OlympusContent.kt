@@ -75,7 +75,14 @@ class OlympusContent(private val mythos: Mythos) {
     val UNDERWORLD = RealmDefinition(
         id = "underworld",
         displayName = "The House of Hades",
-        kind = RealmKind.NETHER,
+        // "It is not fire. It is a great grey plain, and it goes on." — which the engine can only
+        // actually build now that realms are CAVERNs rather than Nether worlds. The constraint
+        // improved the story.
+        kind = RealmKind.CAVERN,
+        platformY = 40,
+        roofY = 90,
+        stone = "DEEPSLATE",
+        platformMaterial = "TUFF",
         access = RealmRules.any(
             RealmRules.roles("hades", "persephone", "charon", "orpheus"),
             RealmRules.SPIRITS, // the dead are already here

@@ -3,7 +3,7 @@ import org.gradle.api.tasks.Copy
 plugins {
     kotlin("jvm") version "2.1.0"
     id("com.gradleup.shadow") version "8.3.11"
-    `maven-publish`   // this addon publishes a type other addons extend — see OlympianSeat
+    `maven-publish`   // this addon publishes a type other addons extend — see Shade
 }
 
 group = property("group") as String
@@ -39,6 +39,7 @@ dependencies {
     // compileOnly, ALWAYS. The host provides these classes at runtime; a shaded copy is
     // a different class with the same name and every `instanceof` silently fails.
     compileOnly("${property("hostGroup")}:mythos-addon-api:${property("hostApiVersion")}")
+    compileOnly("net.crewco:olympian-order:0.1.1")
 
     compileOnly(kotlin("stdlib"))
 }
@@ -74,15 +75,15 @@ tasks.register<Copy>("deployAddon") {
 }
 
 // ---------------------------------------------------------------------------
-// OlympianOrder opens an extension point (OlympianSeat), so other addons need its type at
+// ChthonicRealm opens an extension point (Shade), so other addons need its type at
 // COMPILE time. They get it the same way they get the host API:
 //
-//   build.gradle.kts:  compileOnly("net.crewco:olympian-order:0.1.0")
-//   addon.yml:         depends: [ OlympianOrder ]
+//   build.gradle.kts:  compileOnly("net.crewco:chthonic-realm:0.1.0")
+//   addon.yml:         depends: [ ChthonicRealm ]
 //
-// At RUNTIME the class comes out of the loaded OlympianOrder jar — the host's
+// At RUNTIME the class comes out of the loaded ChthonicRealm jar — the host's
 // AddonClassLoader delegates to whatever an addon names in `depends:`, so there is
-// exactly one OlympianSeat class and `instanceof` works across addons. Never shade it.
+// exactly one Shade class and `instanceof` works across addons. Never shade it.
 //
 //   ./gradlew publishAddonLocally   → ~/.m2, for building a contributor locally
 //   ./gradlew publish               → GitHub Packages
@@ -91,7 +92,7 @@ publishing {
     publications {
         create<MavenPublication>("maven") {
             artifact(tasks.shadowJar)
-            artifactId = "olympian-order"
+            artifactId = "chthonic-realm"
         }
     }
     repositories {
