@@ -38,8 +38,9 @@ class OlympianOrderAddon : AddonBase() {
 
         mythos.powers.register(LotsPower(mythos, context))
         mythos.powers.register(OlympusPower(mythos, context, state))
-        mythos.powers.register(DecreePower(mythos,state,context))
-        mythos.powers.register(OraclePower(mythos,context))
+        mythos.powers.register(AscentPower(mythos, context))
+        mythos.powers.register(DecreePower(mythos, state))
+        mythos.powers.register(OraclePower(mythos))
         mythos.powers.register(CounselPower(mythos, context))
         mythos.powers.register(ErrandPower(context))
         mythos.powers.register(HuntPower(context))
@@ -132,7 +133,7 @@ class OlympianOrderAddon : AddonBase() {
      * that isn't being told on this server.
      */
     private fun grantRule(mythos: Mythos) {
-        mythos.roles.extend("zeus") { it.copy(powers = (it.powers + listOf("lots", "olympus", "decree", "boon")).distinct()) }
+        mythos.roles.extend("zeus") { it.copy(powers = (it.powers + listOf("lots", "olympus", "ascent", "decree", "boon")).distinct()) }
         mythos.roles.extend("poseidon") { it.copy(powers = (it.powers + "boon").distinct()) }
         mythos.roles.extend("hades") { it.copy(powers = (it.powers + listOf("judge", "boon")).distinct()) }
         mythos.roles.extend("hera") { it.copy(powers = (it.powers + "boon").distinct()) }

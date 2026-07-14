@@ -4,6 +4,7 @@ import net.crewco.mythos.addon.AddonContext
 import net.crewco.mythos.api.Mythos
 import net.crewco.mythos.api.power.Power
 import net.crewco.mythos.api.power.PowerContext
+import net.crewco.mythos.api.realm.Gateway
 import net.crewco.mythos.api.story.Beat
 import net.crewco.mythos.api.story.beats
 import net.crewco.mythos.api.story.line
@@ -84,7 +85,7 @@ class OlympusPower(private val mythos: Mythos, private val context: AddonContext
             zeus.sendMessage(mm("<red>Olympus stands. Building a second one would be embarrassing."))
             return false
         }
-        // You cannot find Olympus in a field. Go to Olympus — it is a *world*, and it has
+        // You cannot found Olympus in a field. Go to Olympus — it is a *world*, and it has
         // been sitting there empty since the server generated it, waiting for a throne.
         if (mythos.realms.realmOf(zeus)?.id != "olympus") {
             zeus.sendMessage(mm("<red>Not here. <gray>Olympus is not a hill you climb; it is somewhere else entirely."))
@@ -118,7 +119,7 @@ class OlympusPower(private val mythos: Mythos, private val context: AddonContext
  * Iliad is going to be built on exactly this: Zeus deciding, each morning, who is allowed
  * to help.
  */
-class DecreePower(private val mythos: Mythos, private val state: OlympusState,private val context: AddonContext) : Power {
+class DecreePower(private val mythos: Mythos, private val state: OlympusState) : Power {
     override val id = "decree"
     override val displayName = "Forbid Intervention"
     override val description = "No god may act for three minutes. Yourself excepted, obviously. /power decree"
@@ -126,15 +127,14 @@ class DecreePower(private val mythos: Mythos, private val state: OlympusState,pr
 
     override fun use(ctx: PowerContext): Boolean {
         state.decreeUntil = System.currentTimeMillis() + 180_000
-        context.schedulers.global {Bukkit.getServer().sendMessage(mm("<dark_gray>» <yellow>Zeus <gray>forbids the gods to intervene. <dark_gray><i>For three minutes, the mortals are on their own."))
-        }
+        Bukkit.getServer().sendMessage(mm("<dark_gray>» <yellow>Zeus <gray>forbids the gods to intervene. <dark_gray><i>For three minutes, the mortals are on their own."))
         mythos.chronicle.record("story", "<yellow>Zeus <gray>forbade the gods to intervene.")
         return true
     }
 }
 
 /** Apollo knows what happens next. It has never once helped anybody. */
-class OraclePower(private val mythos: Mythos,private val context: AddonContext) : Power {
+class OraclePower(private val mythos: Mythos) : Power {
     override val id = "oracle"
     override val displayName = "The Oracle"
     override val description = "Drag one hidden thing about this age into the light. /power oracle"
@@ -151,8 +151,8 @@ class OraclePower(private val mythos: Mythos,private val context: AddonContext) 
             return false
         }
         val revealed = hidden.random()
-        context.schedulers.global {         Bukkit.getServer().sendMessage(mm("<dark_gray>» <yellow>Apollo <gray>speaks, and it is worse than not knowing:"))
-            Bukkit.getServer().sendMessage(mm("<dark_gray>   <white><i>${revealed.description}")) }
+        Bukkit.getServer().sendMessage(mm("<dark_gray>» <yellow>Apollo <gray>speaks, and it is worse than not knowing:"))
+        Bukkit.getServer().sendMessage(mm("<dark_gray>   <white><i>${revealed.description}"))
         mythos.chronicle.record("story", "<yellow>Apollo <gray>prophesied: <i>${revealed.description}")
         return true
     }
@@ -336,5 +336,106 @@ class JudgePower(private val mythos: Mythos) : Power {
         hades.sendMessage(mm("<gray>${target.name} wore <white>$lived</white> name(s) in life. You give them <white>$reward</white> essence."))
         target.sendMessage(mm("<dark_gray>The king of the dead has read your whole life and did not look bored."))
         return true
+    }
+}
+
+/**
+ * **The way up.**
+ *
+ * Olympus has been a generated world sitting in the sky since the server started, and until now the
+ * only way to it was an admin command — which is not a mythology, it's a permission node.
+ *
+ * So Zeus cuts a stair. It stands in the open, in a field, made of quartz, and everyone can see it
+ * and walk to it. And it will not take them, because the realm's rule is `DIVINE` and they are not.
+ * A mortal standing at the bottom of a staircase they are not allowed to climb is worth more to this
+ * server than any number of "you do not have permission" messages.
+ */
+class AscentPower(
+    private val mythos: Mythos,
+    private val context: AddonContext,
+) : Power {
+    override val id = "ascent"
+    override val displayName = "Cut the Stair"
+    override val description = "A way up to Olympus, standing in the open where the mortals can see it. /power ascent [close]"
+    override val cooldownSeconds = 0
+
+    override fun use(ctx: PowerContext): Boolean {
+        val zeus = ctx.player
+
+        // He can take it away again — and he will, the first time somebody he doesn't like gets up.
+        if (ctx.args.firstOrNull()?.equals("close", true) == true) {
+            if (mythos.realms.gateways().none { it.id == ASCENT }) {
+                zeus.sendMessage(mm("<red>There is no stair."))
+                return false
+            }
+            mythos.realms.closeGateway(ASCENT)
+            mythos.realms.closeGateway("olympus-descent")
+            mythos.terraform.heal("olympus:ascent")
+
+            Bukkit.getServer().sendMessage(mm("<dark_gray>» <yellow>Zeus <gray>takes the stair away."))
+            Bukkit.getServer().sendMessage(mm("<dark_gray><i>   The field is a field again. Whoever is up there is up there; whoever isn't, isn't."))
+            mythos.chronicle.record("story", "<yellow>Zeus <gray>took the stair away. The way up is closed.")
+            return true
+        }
+
+        if (!mythos.eras.isComplete(OlympusContent.ERA, "olympus_raised")) {
+            zeus.sendMessage(mm("<red>There is nothing up there yet. <gray>Found it first. <white>/power olympus"))
+            return false
+        }
+        if (mythos.realms.realmOf(zeus)?.id != "gaia") {
+            zeus.sendMessage(mm("<red>Cut it in the world below. <gray>A door is no use on the wrong side of itself."))
+            return false
+        }
+        if (mythos.realms.gateways().any { it.id == ASCENT }) {
+            zeus.sendMessage(mm("<red>It's already there. <gray>They look at it every day."))
+            zeus.sendMessage(mm("<dark_gray><i>/power ascent close <dark_gray>— if you've decided they shouldn't."))
+            return false
+        }
+
+        // Through a Scar, so it can be un-landscaped later without hand-editing a chunk.
+        val foot = zeus.location.clone()
+        val scar = mythos.terraform.scar("olympus:ascent")
+        for (y in 0..8) {
+            for (x in -1..1) for (z in -1..1) {
+                if (x == 0 && z == 0) continue
+                scar.set(foot.clone().add(x.toDouble(), y.toDouble(), z.toDouble()).block, Material.QUARTZ_PILLAR)
+            }
+        }
+        scar.set(foot.clone().add(0.0, 9.0, 0.0).block, Material.SEA_LANTERN)
+
+        mythos.realms.openGateway(
+            Gateway(
+                id = ASCENT,
+                at = foot,
+                toRealm = "olympus",
+                radius = 2.0,
+                arrival = "<gold><i>Above the weather. Above the argument.",
+                refusal = "<gray>You climb, and you climb, and the stair does not end and you are still in the field. <dark_gray><i>You are not one of them.",
+                particle = "END_ROD",
+                sound = "minecraft:block.beacon.ambient",
+            ),
+        )
+        // And back down, for anyone who's up there — the gods are not prisoners of their own house.
+        mythos.realms.spawnOf("olympus")?.let { top ->
+            mythos.realms.openGateway(
+                Gateway(
+                    id = "olympus-descent",
+                    at = top.clone().add(0.0, 0.0, 6.0),
+                    toRealm = "gaia",
+                    radius = 2.0,
+                    arrival = "<gray>Down among them again. <dark_gray><i>They are so small, and so loud.",
+                    particle = "CLOUD",
+                ),
+            )
+        }
+
+        Bukkit.getServer().sendMessage(mm("<dark_gray>» <yellow>Zeus <gray>cuts a stair of white stone at <white>${foot.blockX}, ${foot.blockY}, ${foot.blockZ}<gray>."))
+        Bukkit.getServer().sendMessage(mm("<dark_gray><i>   It goes up. You may go and look at it. You may not climb it."))
+        mythos.chronicle.record("story", "<yellow>Zeus <gray>cut the stair to Olympus at ${foot.blockX}, ${foot.blockY}, ${foot.blockZ}. The mortals can see it from their fields.")
+        return true
+    }
+
+    private companion object {
+        const val ASCENT = "olympus-ascent"
     }
 }

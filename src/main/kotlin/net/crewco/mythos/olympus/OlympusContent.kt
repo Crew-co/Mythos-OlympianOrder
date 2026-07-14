@@ -61,6 +61,8 @@ class OlympusContent(private val mythos: Mythos) {
             "<dark_gray><i>From up here everything below looks small enough to be simple.",
         ),
         flight = true,
+        ambientSound = "minecraft:block.beacon.ambient",
+        ambientParticle = "END_ROD",
         platformY = 200,
         platformRadius = 32,
         platformMaterial = "QUARTZ_BLOCK",
@@ -75,9 +77,12 @@ class OlympusContent(private val mythos: Mythos) {
         displayName = "The House of Hades",
         kind = RealmKind.NETHER,
         access = RealmRules.any(
-            RealmRules.roles("hades", "persephone"),
+            RealmRules.roles("hades", "persephone", "charon", "orpheus"),
             RealmRules.SPIRITS, // the dead are already here
             RealmRules.DIVINE,
+            // And whoever the king of the dead has personally given leave to — which is how a
+            // demigod with a lead and no permission problem gets in to fetch a dog.
+            RealmRules.flagged("chthonic.permitted"),
         ),
         refusal = "<dark_gray><i>The living do not come down here. Not without asking.",
         entryLore = listOf(
@@ -85,6 +90,8 @@ class OlympusContent(private val mythos: Mythos) {
             "<gray><i>He drew the worst lot, and rules it better than either of them rules theirs.",
         ),
         ambient = listOf(PotionEffectType.DARKNESS),
+        ambientSound = "minecraft:ambient.soul_sand_valley.mood",
+        ambientParticle = "SOUL",
     )
 
     val era = EraDefinition(
