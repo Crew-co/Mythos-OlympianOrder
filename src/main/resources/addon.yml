@@ -1,0 +1,6 @@
+name: OlympianOrder
+version: 0.1.0
+main: net.crewco.mythos.olympus.OlympianOrderAddon
+api-version: 2
+authors: [ Crew-co ]
+description: Three brothers divide the world by lot. Olympus is raised. Mortals appear, and start asking for things.
